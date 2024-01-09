@@ -14,10 +14,21 @@
  * Access to address 16384 to 24575 (0x4000 to 0x5FFF) results in accessing the Screen memory map;
  * Access to address 24576 (0x6000) results in accessing the Keyboard memory map.
  */ 
+
+ /**
+  * 0 ~ 16K --> 000 0000 0000 0000 ~ 011 1111 1111 1111
+  * 16K ~ 24K --> 100 0000 0000 0000 ~ 101 1111 1111 1111
+  * 24K + 1 --> 110 0000 0000 0000
+ */
 CHIP Memory {
     IN in[16], load, address[15];
     OUT out[16];
 
     PARTS:
-    //// Replace this comment with your code.
+    DMux4Way(in=load, sel=address[13..14], a=loada, b=loadb, c=loadScreen, d=loadKeyboard);
+    Or(a=loada, b=loadb, out=loadRAM);
+    RAM16K(in=in, load=loadRAM, address=address[0..13], out=outRAM);
+    Screen(in=in, load=loadScreen, address=address[0..12], out=outScreen);
+    Keyboard(out=outKeyboard);
+    Mux4Way16(a=outRAM, b=outRAM, c=outScreen, d=outKeyboard, sel=address[13..14], out=out);
 }
